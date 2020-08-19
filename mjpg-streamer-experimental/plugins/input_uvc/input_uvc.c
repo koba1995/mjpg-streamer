@@ -670,7 +670,7 @@ void *cam_thread(void *arg)
 
     if (video_enable(pcontext->videoIn)) {
         IPRINT("Can\'t enable video in first time\n");
-        goto endloop;
+        exit(EXIT_FAILURE);
     }
 
     while(!pglobal->stop) {
@@ -703,16 +703,16 @@ void *cam_thread(void *arg)
                 continue;
             }
             perror("select() error");
-            goto endloop;
+            exit(EXIT_FAILURE);
         } else if (sel == 0) {
             IPRINT("select() timeout\n");
             if (dv_timings) {
                 if (setResolution(pcontext->videoIn, pcontext->videoIn->width, pcontext->videoIn->height) < 0) {
-                    goto endloop;
+                    exit(EXIT_FAILURE);
                 }
                 continue;
             } else {
-                goto endloop;
+                exit(EXIT_FAILURE);
             }
         }
 
@@ -721,7 +721,7 @@ void *cam_thread(void *arg)
             /* grab a frame */
             if(uvcGrab(pcontext->videoIn) < 0) {
                 IPRINT("Error grabbing frames\n");
-                goto endloop;
+                exit(EXIT_FAILURE);
             }
 
             if ( every_count < every - 1 ) {
@@ -820,13 +820,11 @@ other_select_handlers:
             if (FD_ISSET(pcontext->videoIn->fd, &ex_fds)) {
                 IPRINT("FD exception\n");
                 if (video_handle_event(pcontext->videoIn) < 0) {
-                    goto endloop;
+                    exit(EXIT_FAILURE);
                 }
             }
         }
     }
-
-endloop:
 
     DBG("leaving input thread, calling cleanup function now\n");
     pthread_cleanup_pop(1);
